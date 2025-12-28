@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String      @id @default(cuid())
+  username  String
+  email     String      @unique
+  password  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  contact   Contact[]
+  emailSent EmailSent[]
+  chatPdfs  ChatPdf[]
+  forms     Form[]
+}
+
+model Contact {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  companyName String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  emailsSent  EmailSent[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailSent {
+  id       String   @id @default(cuid())
+  subject  String
+  body     String
+  sentAt   DateTime @default(now())
+  platform String?
+
+  status EmailStatus @default(PENDING)
+
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([contactId])
+}
+
+model Attachment {
+  id          String    @id @default(cuid())
+  fileName    String
+  fileUrl     String
+  fileKey     String
+  fileSize    Int?
+  createdAt   DateTime  @default(now())
+  emailSentId String
+  emailSent   EmailSent @relation(fields: [emailSentId], references: [id], onDelete: Cascade)
+
+  @@index([emailSentId])
+}
+
+enum EmailStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+model ChatPdf {
+  id      String @id @default(cuid())
+  pdfName String
+  pdfUrl  String
+  fileKey String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  chatMessage ChatMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatMessage {
+  id      String         @id @default(cuid())
+  content String
+  role    UserSystemEnum
+
+  chatPdfId String
+  chatPdf   ChatPdf @relation(fields: [chatPdfId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserSystemEnum {
+  USER
+  SYSTEM
+}
+
+model Form {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String  @default("")
+  content     String  @default("[]")
+  published   Boolean @default(false)
+
+  visits      Int @default(0)
+  submissions Int @default(0)
+
+  shareUrl String @unique @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  FormSubmission FormSubmission[]
+
+  @@unique([userId, name])
+}
+
+model FormSubmission {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  formId    Int
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+}
