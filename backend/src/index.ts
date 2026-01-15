@@ -23,7 +23,8 @@ app.use(
   cors({
     origin: [
       process.env.CLIENT_URL!,
-      "http://localhost:3000"
+      "http://localhost:3000",
+      "https://nexora.krishnat.dev"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
