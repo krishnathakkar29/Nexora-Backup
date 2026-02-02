@@ -20,8 +20,8 @@ COPY --from=dependencies /app/node_modules ./node_modules
 
 COPY . .
 
-RUN npm run build
 RUN DATABASE_URL=${DATABASE_URL} npx prisma generate --schema=./prisma/schema.prisma
+RUN npm run build
 
 FROM node:22-alpine AS runner
 

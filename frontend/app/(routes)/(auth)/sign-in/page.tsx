@@ -29,6 +29,7 @@ function page() {
     } catch (err: any) {
       if (err instanceof Error) {
         toast.error(err.message);
+        return
       }
       toast.error(err || "Login failed");
     } finally {
